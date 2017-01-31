@@ -79,9 +79,33 @@ def backup(args):
         action_fail("innobackupex failed, you should log on to the unit"
                     "and check the status of the database")
 
+def restore(args):
+    backuppath = (action_get("backuppath")).lower()
+    sstpw = config("sst-password")
+
+    # this is just smashing the local db without any sanity, cluster checks
+    # TODO: check if we are on the leader/master
+    try:
+        subprocess.check_call(
+            ['innobackupex', '--copy-back', backuppath, '--user=sstuser',
+                '--password={}'.format(sstpw)]
+        )
+        action_set({
+            'time-completed': (strftime("%Y-%m-%d %H:%M:%S", gmtime())),
+            'outcome': 'Success'}
+        )
+    except subprocess.CalledProcessError as e:
+        action_set({
+            'time-completed': (strftime("%Y-%m-%d %H:%M:%S", gmtime())),
+            'output': e.output,
+            'return-code': e.returncode,
+            'traceback': traceback.format_exc()})
+        action_fail("innobackupex restore failed, you should log on to the unit"
+                    "and check the status of the database")
+
 # A dictionary of all the defined actions to callables (which take
 # parsed arguments).
-ACTIONS = {"pause": pause, "resume": resume, "backup": backup}
+ACTIONS = {"pause": pause, "resume": resume, "backup": backup, "restore": restore}
 
 
 def main(args):

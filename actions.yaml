@@ -17,4 +17,9 @@ backup:
       type: boolean
       default: false
       description: Make an incremental database backup
-
+restore:
+  description: Restore full database from backup
+  params:
+    backuppath:
+      type: string
+      description: The path to the backup
